@@ -3,7 +3,7 @@ import os
 import cv2
 import subprocess
 
-folder_path = "../camera/pictures/test4"     # where to store the pictures
+folder_path = "../pictures/test4"     # where to store the pictures
 device = "/dev/video4"               # what is the name of the camera, generally /dev/vieo4 or /dev/video2
                                      # you can use "ls /dev/video*" to list video device connected to computer
 interval_between_pictures = 1        # in second
@@ -36,8 +36,8 @@ subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "white_balance_a
 # Gamma to 100 to avoid non-linear brightness adjustments.
 subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gamma=100"], check=True)
 # Gain is an electonic amplificaton of the sensors signal. Sould be increased it in dark environment.
-# also amplifies noise. Ranges from 0 to 100.
-subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gain=100"], check=True)
+# Drawbacks :amplifies noise, can make light zones saturated. Ranges from 0 to 100.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gain=0"], check=True)
 # Power line frequency to avoid flickering caused by artificial lighting.
 # the value depends on your region (1 for 50 Hz - Europe, 2 for 60 Hz - North America).
 subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "power_line_frequency=1"], check=True)
@@ -71,7 +71,7 @@ def capture_image(folder_path, image_name, device):
           "-f", "rawvideo",
           "-pixel_format", "yuyv422",
           "-video_size", "1280x960",
-          "-i", folder_path + "/" + image_name + ".raw",
+          "-i", folder_path + "/raw_" + image_name + ".raw",
           "-vf", "eq=brightness=" + brightness +
           ":saturation=" + saturation +
           ":contrast=" + contrast,
