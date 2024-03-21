@@ -3,7 +3,7 @@ import os
 import cv2
 import subprocess
 
-folder_path = "./pictures/test3"     # where to store the pictures
+folder_path = "../camera/pictures/test4"     # where to store the pictures
 device = "/dev/video4"               # what is the name of the camera, generally /dev/vieo4 or /dev/video2
                                      # you can use "ls /dev/video*" to list video device connected to computer
 interval_between_pictures = 1        # in second
@@ -14,14 +14,43 @@ if not os.path.exists(folder_path):
      os.makedirs(folder_path)
 
 ## Settings for the camera
-subprocess.run(["v4l2-ctl", "--device=/dev/video4", "--set-ctrl", "auto_exposure=1"], check=True)
-subprocess.run(["v4l2-ctl", "--device=/dev/video4", "--set-ctrl", "exposure_time_absolute=5000"], check=True)
-subprocess.run(["v4l2-ctl", "--device=/dev/video4", "--set-ctrl", "white_balance_automatic=1"], check=True)
-subprocess.run(["v4l2-ctl", "--device=/dev/video4", "--set-ctrl", "exposure_dynamic_framerate=1"], check=True)
+## Camera controlls
+# Auto exposure to manual mode (1) to be able to tune manually the exposure time
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "auto_exposure=1"], check=True)
+# Exposure time to maximum for low-light condition
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "exposure_time_absolute=5000"], check=True)
+# Dynamic framerate to false to increse reproducibility
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "exposure_dynamic_framerate=0"], check=True)
 
-## Define here the default ffmpeg parameters for on live visualisation of the time_lapse
-brightness = "0.2"
-saturation = "2"
+## Users controlls
+# Brightness to default to avoid artificial enhancement or dimming of the image.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "brightness=0"], check=True)
+# Contrast to default to maintain natural contrast without software enhancement.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "contrast=32"], check=True)
+# Saturation to default to preserve natural color saturation.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "saturation=50"], check=True)
+# Hue to default to avoid color shifting.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "hue=0"], check=True)
+# Automatic white balance disabled to prevent the camera from adjusting colors based on lighting conditions.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "white_balance_automatic=0"], check=True)
+# Gamma to 100 to avoid non-linear brightness adjustments.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gamma=100"], check=True)
+# Gain is an electonic amplificaton of the sensors signal. Sould be increased it in dark environment.
+# also amplifies noise. Ranges from 0 to 100.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gain=100"], check=True)
+# Power line frequency to avoid flickering caused by artificial lighting.
+# the value depends on your region (1 for 50 Hz - Europe, 2 for 60 Hz - North America).
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "power_line_frequency=1"], check=True)
+# White balance temperature to a fixed value for consistent color temperature.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "white_balance_temperature=4600"], check=True)
+# Sharpness to the minimum to avoid artificial edge enhancement.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "sharpness=1"], check=True)
+# Backlight compensation to 0 to avoid artificial light adjustments on diffrent parts of the picture.
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "backlight_compensation=0"], check=True)
+
+## Parameter for FFMPEG conversion from raw to png
+brightness = "0"
+saturation = "1"
 contrast = "1"
 
 def capture_image(folder_path, image_name, device):
@@ -33,7 +62,7 @@ def capture_image(folder_path, image_name, device):
           "--set-fmt-video=width=1280,height=960,pixelformat=YUYV",
           "--stream-mmap",
           "--stream-count=1",
-          "--stream-to=" + folder_path + "/" + image_name + ".raw"
+          "--stream-to=" + folder_path + "/raw_" + image_name + ".raw"
      ]
      subprocess.run(v4l2_command, stdout=subprocess.DEVNULL) ## run the above defined command in terminal
      ## Now we use ffmpeg for conversion from raw to png
