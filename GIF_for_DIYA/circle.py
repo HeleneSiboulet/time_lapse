@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 img_size = (64, 64)
 background_color = (0, 0, 0)
 circle_color = (0, 255, 0)
-circle_diameter = 32
+circle_diameter = 30
 circle_radius = circle_diameter // 2
 
 image = Image.new('RGB', img_size, background_color)

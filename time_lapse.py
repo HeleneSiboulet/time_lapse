@@ -3,7 +3,7 @@ import os
 import cv2
 import subprocess
 
-folder_path = "../pictures/test4"     # where to store the pictures
+folder_path = "../pictures/background"     # where to store the pictures
 device = "/dev/video4"               # what is the name of the camera, generally /dev/vieo4 or /dev/video2
                                      # you can use "ls /dev/video*" to list video device connected to computer
 interval_between_pictures = 1        # in second
@@ -14,11 +14,22 @@ if not os.path.exists(folder_path):
      os.makedirs(folder_path)
 
 ## Settings for the camera
+
+# If you have too much / not enough light, modifie the two following parameters
+# Exposition time allows for more light to go to the captor, ranges from 1 to 5000, default 650
+exposition_time = 5000
+# Gain amplifies the signals from captors, may increase noise, ranges from 0 to 100, increase exposition_time first
+gain = 20
+
+# For more information on the parameters you can tune on the camera please enter
+# v4l2-ctl --device=/dev/video4 --list-ctrls
+# in terminal, remplacing --device/dev/video4 by the path of your device
+
 ## Camera controlls
 # Auto exposure to manual mode (1) to be able to tune manually the exposure time
 subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "auto_exposure=1"], check=True)
 # Exposure time to maximum for low-light condition
-subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "exposure_time_absolute=5000"], check=True)
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "exposure_time_absolute=" + str(exposition_time)], check=True)
 # Dynamic framerate to false to increse reproducibility
 subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "exposure_dynamic_framerate=0"], check=True)
 
@@ -37,7 +48,7 @@ subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "white_balance_a
 subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gamma=100"], check=True)
 # Gain is an electonic amplificaton of the sensors signal. Sould be increased it in dark environment.
 # Drawbacks :amplifies noise, can make light zones saturated. Ranges from 0 to 100.
-subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gain=0"], check=True)
+subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "gain=" + str(gain)], check=True)
 # Power line frequency to avoid flickering caused by artificial lighting.
 # the value depends on your region (1 for 50 Hz - Europe, 2 for 60 Hz - North America).
 subprocess.run(["v4l2-ctl", "--device=" + device, "--set-ctrl", "power_line_frequency=1"], check=True)
