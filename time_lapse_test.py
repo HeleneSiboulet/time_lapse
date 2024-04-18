@@ -22,7 +22,7 @@ if not os.path.exists(folder_path):
 
 # If you have too much / not enough light, modifie the two following parameters
 # Exposition time allows for more light to go to the captor, ranges from 1 to 5000, default 650
-exposition_time = 5000
+exposition_time = 4952
 # Gain amplifies the signals from captors, may increase noise, ranges from 0 to 100, increase exposition_time first
 gain = 20
 

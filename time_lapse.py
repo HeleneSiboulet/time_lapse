@@ -19,7 +19,7 @@ if not os.path.exists(folder_path):
 # Exposition time allows for more light to go to the captor, ranges from 1 to 5000, default 650
 exposition_time = 5000
 # Gain amplifies the signals from captors, may increase noise, ranges from 0 to 100, increase exposition_time first
-gain = 20
+gain = 0
 
 # For more information on the parameters you can tune on the camera please enter
 # v4l2-ctl --device=/dev/video4 --list-ctrls
