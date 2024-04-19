@@ -8,6 +8,7 @@ output_filename = 'output.mp4'
 ffmpeg_command = [
     ffmpeg,
     '-y',  # Overwrite output file if it exists
+    '-loglevel', 'warning',  # Show only warnings and error messages
     '-f', 'rawvideo',  # Input format
     '-vcodec', 'rawvideo',  # Input codec
     '-s', '1280x960',  # Size of one frame
