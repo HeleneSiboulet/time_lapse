@@ -6,10 +6,41 @@ from datetime import datetime
 import numpy as np
 import os
 
+# Define the function for when to record and the diffrent chanels
+# Durations are in seconds
+cycle_duration = 60 * 15
+record_duration = 20
+warm_up_duration = 10
+extra_delay = 5
+channel_duration = warm_up_duration + record_duration + extra_delay
+start = time.time()
+nb_channels = 3
+channel_names = ['red', 'green', 'blue']
+assert (len(channel_names) == nb_channels)
+
+## Chanelto_record() returns the nb of the channel to record. 0 if not recording.
+## And a boolean that indicates if recording is in progress
+def channel_to_record() :
+    now = ( time.time() - start ) % cycle_duration
+    channel = (now // channel_duration) + 1
+    if (channel > nb_channels) :
+        return (0 , False)
+    else :
+        where_in_record = now - (channel - 1) * channel_duration
+        if (where_in_record >= warm_up_duration) and (where_in_record <= warm_up_duration + record_duration) :
+            return (int (channel), True)
+        return (int(channel), False)
+channel = 0
+recording = False
+
+
 # Choose output path
-output_path = '../pictures/stream'
+output_path = '../pictures/sync_test'
 if not os.path.exists(output_path):
     os.makedirs(output_path)
+for name in channel_names :
+    if not os.path.exists(output_path + '/' + name) :
+        os.makedirs(output_path + '/' + name)
 output_filename = "tl_video.mp4"
 
 # Define a FFMPEG command that allows to store the video flux
@@ -28,7 +59,7 @@ ffmpeg_command = [
     '-vcodec', 'mpeg4',  # Output codec
     output_filename
 ]
-process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE)
+#process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE) #uncomment if you want to record the video
 
 ## Define functions to initialize the parameters of the camera
 ## Otherwise the camera remember the parameters set for its last use
@@ -80,16 +111,6 @@ if not cap.isOpened():
 set_camera_user_settings()
 set_camera_controls()
 
-# Define the function for when to record
-# Durations are in seconds
-cycle_duration = 60
-record_duration = 20
-warm_up_duration = 40
-start = time.time()
-recording_in_progress = False
-def should_record() :
-    now = time.time() - start
-    return (((now % cycle_duration) >= warm_up_duration) and ((now % cycle_duration) <= record_duration + warm_up_duration))
 
 # Make a list a frame that will be averaged to a png
 list_frame = []
@@ -103,31 +124,34 @@ def average_frames (list_of_frames) : # compute the average of sevral frames
     return (average_fram)
 
 try:
+    print ('Beginning to stream')
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
         if not ret:   # If image could not be captured
             print("Error: Could not read frame.")
             break
-
-        # Write the frame to the FFmpeg process
-        if (should_record()) :
-            if  ( not recording_in_progress) :          # Begin to record
-                recording_in_progress = True
+        # Shall we record smth and what ?
+        previous_recording = recording
+        (channel, recording) = channel_to_record()
+        # depending on if we should record or not
+        match (previous_recording, recording) :
+            ## beggining to record
+            case (False, True) :
                 list_frame = []
-                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-
-            else :                                      # Recording in progress
-                process.stdin.write(frame.tobytes())
+            ## recoding in progress
+            case (True, True) :
+                #process.stdin.write(frame.tobytes()) # save video
                 list_frame.append(frame)
-        else :
-            if (recording_in_progress) :                # Stop recording
-                recording_in_progress = False
+            ## stop recording and save picture
+            case (True, False) :
                 average_frame = average_frames(list_frame)
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
                 output_name = f"output_{timestamp}.png"
-                cv2.imwrite(output_path + '/' + output_name, average_frame)
-                print( "Image Captured  " + f"{timestamp}" )
-        # Display the frame (optional)
+                cv2.imwrite(output_path + '/' + channel_names[channel - 1]+ '/' + output_name, average_frame)
+                print( "Image Captured  " + channel_names[channel - 1] + f" {timestamp}" )
+
+        # Display the frame for on time tracking
         cv2.imshow('Webcam Stream', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -137,7 +161,6 @@ except KeyboardInterrupt:
 # When everything done, release the capture and close FFmpeg
 cap.release()
 cv2.destroyAllWindows()
-process.stdin.close()
-process.wait()
-
-print(f"Video saved as {output_filename}")
+#process.stdin.close()
+#process.wait()
+#print(f"Video saved as {output_filename}")

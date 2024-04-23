@@ -4,18 +4,18 @@ import math
 from functools import reduce
 
 # Define the pixel colors
-red = (30, 0, 0)
-green = (0, 30, 0)
-blue = (0, 0, 30)
+red = (50, 0, 0)
+green = (0, 50, 0)
+blue = (0, 0, 50)
 black = (0, 0, 0)
 color_list = [ red, green, blue ]
 color_list.append( (0, 0, 0) )
 
 # Define the duration of each color in seconds
-cycle_duration = 60
-red_duration = 15
-green_duration = 15
-blue_duration = 15
+cycle_duration = 60 * 15
+red_duration = 40
+green_duration = 40
+blue_duration = 40
 duration_list = [ red_duration, green_duration, blue_duration ]
 pause_duration = cycle_duration - sum(duration_list)
 assert(pause_duration >= 0)

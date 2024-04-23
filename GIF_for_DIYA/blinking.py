@@ -6,19 +6,19 @@ import math
 from functools import reduce
 
 # Define the pixel colors
-intensity = 100
-red = (intensity, 0, 0)
+intensity = 255
+intensity = [255, 150, 100, 70, 50, 30, 10, 5, 3]
 black = (0,0,0)
 
 # Define image
-red_image = (Image.new('RGB', (1, 1), red))
+frames = []
+for i in intensity :
+    image = (Image.new('RGB', (1,1), (i,0,0)))
+    frames.append(image)
 black_image = (Image.new('RGB', (1, 1), black))
 
 # Define duration
-frame_duration = 60.
-
-# Define the  list of frames
-frames = [black_image, red_image]
+frame_duration = 40.
 
 # create the GIF
 imageio.mimsave('blinking.gif', frames, fps= 1/frame_duration)
